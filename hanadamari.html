@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>花だまり</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#EEF0E6;
+    --surface:#F9FAF3;
+    --surface-2:#FFFFFF;
+    --ink:#1A2420;
+    --ink-soft:#57655F;
+    --line:#D7D9C9;
+    --indigo:#24466B;      --indigo-tint:#DCE5EC;
+    --beni:#B12A56;        --beni-tint:#F6DEE6;
+    --yamabuki:#A9740E;    --yamabuki-tint:#F3E7C9;
+    --midori:#3F5C36;      --midori-tint:#DEE7D6;
+    --murasaki:#5E3F80;    --murasaki-tint:#E6DEEE;
+    --pale:#7A7E70;        --pale-tint:#E9EAE0;
+    --focus:#24466B;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12181A;
+      --surface:#1B2422;
+      --surface-2:#212B29;
+      --ink:#ECEFE6;
+      --ink-soft:#A7B0A8;
+      --line:#2C3733;
+      --indigo:#8FB2D6;     --indigo-tint:#223243;
+      --beni:#E993AC;       --beni-tint:#3B2029;
+      --yamabuki:#E8C066;   --yamabuki-tint:#3A2E15;
+      --midori:#96B884;     --midori-tint:#253326;
+      --murasaki:#C0A3DA;   --murasaki-tint:#2E2438;
+      --pale:#AEB2A2;       --pale-tint:#262A22;
+      --focus:#8FB2D6;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12181A;
+    --surface:#1B2422;
+    --surface-2:#212B29;
+    --ink:#ECEFE6;
+    --ink-soft:#A7B0A8;
+    --line:#2C3733;
+    --indigo:#8FB2D6;     --indigo-tint:#223243;
+    --beni:#E993AC;       --beni-tint:#3B2029;
+    --yamabuki:#E8C066;   --yamabuki-tint:#3A2E15;
+    --midori:#96B884;     --midori-tint:#253326;
+    --murasaki:#C0A3DA;   --murasaki-tint:#2E2438;
+    --pale:#AEB2A2;       --pale-tint:#262A22;
+    --focus:#8FB2D6;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+    padding-inline:16px;
+  }
+  h1,h2,h3{
+    font-family:"Shippori Mincho", serif;
+    text-wrap:balance;
+    margin:0;
+  }
+  .num{ font-variant-numeric:tabular-nums; }
+
+  .topbar{
+    position:sticky; top:0; z-index:5;
+    background:var(--bg);
+    padding-block:16px 12px;
+    border-bottom:1px solid var(--line);
+    display:flex; flex-direction:column; gap:12px;
+    max-width:1180px; margin-inline:auto;
+  }
+  .brand{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .brand h1{ font-size:1.5rem; font-weight:700; letter-spacing:.02em; }
+  .brand span{ color:var(--ink-soft); font-size:.85rem; }
+  .storage-note{ color:var(--ink-soft); font-size:.76rem; margin:0; }
+
+  .tabs{ display:flex; gap:6px; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:4px; width:fit-content; flex-wrap:wrap; }
+  .tab-btn{
+    appearance:none; border:none; background:transparent; color:var(--ink-soft);
+    font-family:inherit; font-size:.92rem; font-weight:500; padding:8px 16px; border-radius:7px;
+    cursor:pointer;
+  }
+  .tab-btn[aria-selected="true"]{ background:var(--indigo); color:var(--surface-2); }
+  .tab-btn:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+
+  main{ max-width:1180px; margin-inline:auto; padding-block:20px 48px; }
+  .view[hidden]{ display:none; }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+  }
+
+  .layout-2col{ display:grid; grid-template-columns:minmax(280px,380px) 1fr; gap:20px; align-items:start; }
+  @media (max-width:760px){ .layout-2col{ grid-template-columns:1fr; } }
+  .stack{ display:flex; flex-direction:column; gap:20px; }
+
+  .form-card h2{ font-size:1.15rem; margin-bottom:4px; }
+  .form-card .hint{ color:var(--ink-soft); font-size:.82rem; margin-bottom:16px; }
+  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+  .field label{ font-size:.82rem; color:var(--ink-soft); }
+  .field input[type="text"], .field input[type="number"], .field input[type="date"], .field textarea, .field select{
+    font-family:inherit; font-size:.95rem; color:var(--ink);
+    background:var(--surface-2); border:1px solid var(--line); border-radius:8px;
+    padding:9px 11px;
+  }
+  .field textarea{ resize:vertical; min-height:56px; }
+  .field input:focus-visible, .field textarea:focus-visible, .field select:focus-visible{
+    outline:2px solid var(--focus); outline-offset:1px;
+  }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  .photo-input{ display:flex; align-items:center; gap:12px; }
+  .photo-preview{
+    width:56px; height:56px; border-radius:10px; border:1px solid var(--line);
+    background:var(--surface-2); object-fit:cover; flex-shrink:0;
+  }
+  .swatch{ width:56px; height:56px; border-radius:10px; border:1px solid var(--line); flex-shrink:0; }
+  .file-btn{
+    appearance:none; border:1px dashed var(--line); background:var(--surface-2); color:var(--ink-soft);
+    font-family:inherit; font-size:.85rem; padding:10px 12px; border-radius:8px; cursor:pointer; flex:1;
+  }
+  .detected{ font-size:.8rem; color:var(--ink-soft); margin-top:4px; }
+
+  button.primary{
+    appearance:none; border:none; border-radius:9px; background:var(--indigo); color:var(--surface-2);
+    font-family:inherit; font-weight:700; font-size:.95rem; padding:11px 16px; cursor:pointer; width:100%;
+  }
+  button.primary:disabled{ background:var(--pale); cursor:not-allowed; }
+  button.primary:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  button.secondary{
+    appearance:none; border:1px solid var(--line); border-radius:9px; background:var(--surface-2); color:var(--ink);
+    font-family:inherit; font-weight:500; font-size:.85rem; padding:8px 12px; cursor:pointer;
+  }
+  button.secondary:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  button.ready-btn{
+    appearance:none; border:none; border-radius:9px; background:var(--yamabuki); color:#241a06;
+    font-family:inherit; font-weight:700; font-size:.85rem; padding:9px 14px; cursor:pointer;
+  }
+
+  .chip{
+    display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:4px 11px;
+    font-size:.78rem; font-weight:500; white-space:nowrap;
+  }
+  .chip .dot{ width:8px; height:8px; border-radius:50%; }
+
+  .status-badge{ border-radius:999px; padding:3px 10px; font-size:.75rem; font-weight:700; white-space:nowrap; }
+  .status-open{ background:var(--indigo-tint); color:var(--indigo); }
+  .status-ready{ background:var(--yamabuki-tint); color:var(--yamabuki); }
+  .status-fulfilled{ background:var(--midori-tint); color:var(--midori); }
+
+  @media (prefers-reduced-motion: no-preference){
+    .status-ready{ animation:pulse-ready 1.8s ease-in-out infinite; }
+  }
+  @keyframes pulse-ready{
+    0%,100%{ box-shadow:0 0 0 0 rgba(169,116,14,.35); }
+    50%{ box-shadow:0 0 0 5px rgba(169,116,14,0); }
+  }
+
+  .empty-note{ color:var(--ink-soft); font-size:.88rem; }
+
+  .progress-track{ height:8px; border-radius:99px; background:var(--pale-tint); overflow:hidden; }
+  .progress-fill{ height:100%; border-radius:99px; transition:width .3s ease; }
+  .progress-label{ display:flex; justify-content:space-between; font-size:.78rem; color:var(--ink-soft); margin-top:4px; }
+
+  .mini-row{
+    display:flex; align-items:center; gap:12px; border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; background:var(--surface-2);
+  }
+  .mini-row .swatch, .mini-row img.swatch{ width:40px; height:40px; border-radius:8px; }
+  .mini-row .meta{ flex:1; min-width:0; }
+  .mini-row .meta .name{ font-weight:700; font-size:.92rem; }
+  .mini-row .meta .sub{ color:var(--ink-soft); font-size:.78rem; }
+  .mini-list{ display:flex; flex-direction:column; gap:10px; }
+
+  .order-card{
+    border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--surface-2);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .order-card + .order-card{ margin-top:12px; }
+  .order-card .head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .order-card .titles .company{ font-weight:700; font-size:1rem; }
+  .order-card .titles .sub{ color:var(--ink-soft); font-size:.8rem; margin-top:2px; }
+  .order-card .criteria{ font-size:.85rem; background:var(--surface); border-radius:8px; padding:8px 10px; color:var(--ink); }
+  .order-card .foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+
+  .pool-group{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--surface-2); }
+  .pool-group + .pool-group{ margin-top:12px; }
+  .pool-group .head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .pool-group .total{ font-weight:700; }
+  .contrib-list{ display:flex; flex-direction:column; gap:6px; }
+  .contrib-row{ display:flex; justify-content:space-between; gap:10px; font-size:.82rem; color:var(--ink-soft); border-top:1px dashed var(--line); padding-top:6px; }
+  .contrib-row:first-child{ border-top:none; padding-top:0; }
+  .contrib-row .who{ color:var(--ink); }
+
+  .lot-card{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--surface-2); }
+  .lot-card + .lot-card{ margin-top:12px; }
+
+  @media (max-width:760px){ .row2{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>花だまり</h1>
+    <span>加工会社の発注と農家の小口納品を、仲介業者がとりまとめる集荷プロトタイプ(ハッカソン用)</span>
+  </div>
+  <p class="storage-note">※データはこの端末のブラウザ内(localStorage)だけに保存されます。他の人や別のブラウザ・端末とは共有されません。</p>
+  <div class="tabs" role="tablist">
+    <button class="tab-btn" id="tabCompany" role="tab" aria-selected="true">加工会社として発注する</button>
+    <button class="tab-btn" id="tabFarmer" role="tab" aria-selected="false">農家として納品する</button>
+    <button class="tab-btn" id="tabBroker" role="tab" aria-selected="false">集荷ダッシュボード</button>
+  </div>
+</header>
+
+<main>
+  <section class="view" id="companyView">
+    <div class="layout-2col">
+      <form class="card form-card" id="orderForm">
+        <h2>発注内容を入力</h2>
+        <p class="hint">必要な花の量と基準を入力し、決定を押すと仲介業者へ発注されます。農家からの納品が集まり次第まとめて出荷されます。</p>
+
+        <div class="field">
+          <label for="companyName">貴社名</label>
+          <input type="text" id="companyName" placeholder="例: 京染め工房 藍生堂" required>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="orderFlowerName">花の品種</label>
+            <input type="text" id="orderFlowerName" list="flowerNames" placeholder="例: 藤" autocomplete="off" required>
+          </div>
+          <div class="field">
+            <label for="orderColorCategory">色の系統</label>
+            <select id="orderColorCategory" required>
+              <option value="" disabled selected>選択してください</option>
+              <option value="beni">紅系(べに)</option>
+              <option value="yamabuki">黄系(山吹)</option>
+              <option value="midori">緑系</option>
+              <option value="indigo">藍系</option>
+              <option value="murasaki">紫系(紫根)</option>
+              <option value="pale">淡色・白系</option>
+            </select>
+          </div>
+        </div>
+
+        <datalist id="flowerNames">
+          <option value="藤"></option>
+          <option value="紅花"></option>
+          <option value="ひまわり"></option>
+          <option value="カーネーション"></option>
+          <option value="デルフィニウム"></option>
+          <option value="ダリア"></option>
+          <option value="マリーゴールド"></option>
+          <option value="キク"></option>
+          <option value="トルコギキョウ"></option>
+        </datalist>
+
+        <div class="row2">
+          <div class="field">
+            <label for="targetQty">必要量(kg)</label>
+            <input type="number" id="targetQty" min="0.1" step="0.1" placeholder="例: 30" required>
+          </div>
+          <div class="field">
+            <label for="dueDate">希望納期(任意)</label>
+            <input type="date" id="dueDate">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="criteria">品質基準・条件(任意)</label>
+          <textarea id="criteria" placeholder="例: 農薬不使用。開花から3日以内の花のみ。花弁に傷みがないこと。"></textarea>
+        </div>
+
+        <button type="submit" class="primary" id="orderSubmitBtn">この内容で発注する(決定)</button>
+      </form>
+
+      <div class="card">
+        <h2>自社の発注状況</h2>
+        <p class="hint">このブラウザで登録した発注です。在庫プールの量に応じて進捗が自動で更新されます。</p>
+        <div class="mini-list" id="myOrders">
+          <p class="empty-note">まだ発注がありません。左のフォームから登録してみてください。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="farmerView" hidden>
+    <div class="layout-2col">
+      <form class="card form-card" id="deliveryForm">
+        <h2>花を納品する</h2>
+        <p class="hint">写真から色を自動判定します(あくまで目安です)。花の色系統と品種は下のプルダウン・入力欄で確定してください。</p>
+
+        <div class="field">
+          <label for="photoFile">写真(任意)</label>
+          <div class="photo-input">
+            <img id="photoPreview" class="photo-preview" hidden alt="アップロードした花の写真プレビュー">
+            <div id="swatchPreview" class="swatch" style="background:var(--pale-tint)"></div>
+            <label class="file-btn" for="photoFile">写真を選ぶ</label>
+            <input type="file" id="photoFile" accept="image/*" style="position:absolute; width:1px; height:1px; opacity:0;">
+          </div>
+          <div class="detected" id="detectedNote">まだ写真がありません</div>
+        </div>
+
+        <div class="field">
+          <label for="deliveryColorCategory">花の色系統</label>
+          <select id="deliveryColorCategory" required>
+            <option value="" disabled selected>選択してください</option>
+            <option value="beni">紅系(べに)</option>
+            <option value="yamabuki">黄系(山吹)</option>
+            <option value="midori">緑系</option>
+            <option value="indigo">藍系</option>
+            <option value="murasaki">紫系(紫根)</option>
+            <option value="pale">淡色・白系</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="deliveryFlowerName">花の品種名</label>
+          <input type="text" id="deliveryFlowerName" list="flowerNames" placeholder="例: 藤" autocomplete="off" required>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="deliveryQty">数量(kg)</label>
+            <input type="number" id="deliveryQty" min="0.1" step="0.1" placeholder="例: 3.5" required>
+          </div>
+          <div class="field">
+            <label for="farmerName">出荷者名</label>
+            <input type="text" id="farmerName" placeholder="例: 山田農園" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="deliveryNote">メモ(任意)</label>
+          <textarea id="deliveryNote" placeholder="例: 本日午前に収穫。花弁の状態は良好です。"></textarea>
+        </div>
+
+        <button type="submit" class="primary" id="deliverySubmitBtn">この内容で納品する</button>
+      </form>
+
+      <div class="stack">
+        <div class="card">
+          <h2>現在募集中のニーズ(参考)</h2>
+          <p class="hint">加工会社からの発注と、在庫プールの現在量です。同じ品種・色系統を納品すると進捗が進みます。</p>
+          <div class="mini-list" id="needsList">
+            <p class="empty-note">現在募集中の発注はありません。</p>
+          </div>
+        </div>
+        <div class="card">
+          <h2>自分の納品履歴</h2>
+          <div class="mini-list" id="myDeliveries">
+            <p class="empty-note">まだ納品がありません。左のフォームから登録してみてください。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="brokerView" hidden>
+    <div class="card" style="margin-bottom:20px;">
+      <h2>発注一覧</h2>
+      <p class="hint">在庫プールが必要量に達すると「ロットを確定して出荷する」が押せるようになります。</p>
+      <div id="orderBoard"><p class="empty-note">発注はまだありません。</p></div>
+    </div>
+    <div class="card" style="margin-bottom:20px;">
+      <h2>在庫プール(未割当・品種×色系統ごと)</h2>
+      <div id="poolBoard"><p class="empty-note">在庫はまだありません。</p></div>
+    </div>
+    <div class="card">
+      <h2>出荷済みロット</h2>
+      <div id="lotBoard"><p class="empty-note">出荷済みのロットはまだありません。</p></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  const CATS = {
+    beni:      { label:"紅系(べに)",   varName:"--beni" },
+    yamabuki:  { label:"黄系(山吹)",   varName:"--yamabuki" },
+    midori:    { label:"緑系",         varName:"--midori" },
+    indigo:    { label:"藍系",         varName:"--indigo" },
+    murasaki:  { label:"紫系(紫根)",   varName:"--murasaki" },
+    pale:      { label:"淡色・白系",   varName:"--pale" }
+  };
+
+  function categorize(h, s, l){
+    if (s < 0.15 || l > 0.92 || l < 0.08) return "pale";
+    if (h < 20 || h >= 340) return "beni";
+    if (h < 65) return "yamabuki";
+    if (h < 170) return "midori";
+    if (h < 255) return "indigo";
+    return "murasaki";
+  }
+  function rgbToHsl(r,g,b){
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h,s,l=(max+min)/2;
+    if(max===min){ h=0; s=0; }
+    else{
+      const d=max-min;
+      s = l>0.5 ? d/(2-max-min) : d/(max+min);
+      switch(max){
+        case r: h=(g-b)/d+(g<b?6:0); break;
+        case g: h=(b-r)/d+2; break;
+        default: h=(r-g)/d+4;
+      }
+      h*=60;
+    }
+    return {h,s,l};
+  }
+  function rgbToHex(r,g,b){
+    return "#" + [r,g,b].map(v=>Math.round(v).toString(16).padStart(2,"0")).join("");
+  }
+  function extractColor(imgEl){
+    const size = 48;
+    const canvas = document.createElement("canvas");
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(imgEl, 0, 0, size, size);
+    let data;
+    try { data = ctx.getImageData(0,0,size,size).data; }
+    catch(e){ return null; }
+    let r=0,g=0,b=0,n=0;
+    for(let i=0;i<data.length;i+=4){ r+=data[i]; g+=data[i+1]; b+=data[i+2]; n++; }
+    r/=n; g/=n; b/=n;
+    const hex = rgbToHex(r,g,b);
+    const {h,s,l} = rgbToHsl(r,g,b);
+    return { hex, category: categorize(h,s,l) };
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+  function fmtDate(ts){
+    if(!ts) return "";
+    return new Date(ts).toLocaleDateString("ja-JP", {year:"numeric", month:"numeric", day:"numeric"});
+  }
+  function catChip(catKey){
+    const cat = CATS[catKey] || CATS.pale;
+    return '<span class="chip" style="background:var('+cat.varName+'-tint); color:var('+cat.varName+')"><span class="dot" style="background:var('+cat.varName+')"><\/span>'+cat.label+'<\/span>';
+  }
+  function progressBar(pct, colorVar){
+    const clamped = Math.max(0, Math.min(100, pct));
+    return '<div class="progress-track"><div class="progress-fill" style="width:'+clamped+'%; background:var('+colorVar+')"><\/div><\/div>';
+  }
+
+  const ORDERS_KEY = "hd_orders_v1";
+  const DELIVERIES_KEY = "hd_deliveries_v1";
+  function loadList(key){
+    try{ return JSON.parse(localStorage.getItem(key) || "[]"); }
+    catch(e){ return []; }
+  }
+  function saveList(key, list){
+    try{ localStorage.setItem(key, JSON.stringify(list)); }
+    catch(e){ /* 保存できない環境でも表示は継続する */ }
+  }
+  function genId(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+  let latestOrders = loadList(ORDERS_KEY);
+  let latestDeliveries = loadList(DELIVERIES_KEY);
+
+  // --- tabs ---
+  const tabs = {
+    company: { btn: document.getElementById("tabCompany"), view: document.getElementById("companyView") },
+    farmer:  { btn: document.getElementById("tabFarmer"),  view: document.getElementById("farmerView") },
+    broker:  { btn: document.getElementById("tabBroker"),  view: document.getElementById("brokerView") }
+  };
+  Object.keys(tabs).forEach(key => {
+    tabs[key].btn.addEventListener("click", () => switchTab(key));
+  });
+  function switchTab(which){
+    Object.keys(tabs).forEach(key => {
+      const active = key === which;
+      tabs[key].btn.setAttribute("aria-selected", String(active));
+      tabs[key].view.hidden = !active;
+    });
+  }
+
+  // --- pool helpers ---
+  function poolDeliveriesFor(flowerName, colorCategory){
+    return latestDeliveries.filter(d => d.status === "in_pool" && d.flowerName === flowerName && d.colorCategory === colorCategory);
+  }
+  function sumQty(list){ return list.reduce((s,d)=>s+d.quantityKg, 0); }
+
+  // --- order form ---
+  const orderForm = document.getElementById("orderForm");
+  const orderSubmitBtn = document.getElementById("orderSubmitBtn");
+  orderForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const companyName = document.getElementById("companyName").value.trim();
+    const flowerName = document.getElementById("orderFlowerName").value.trim();
+    const colorCategory = document.getElementById("orderColorCategory").value;
+    const targetQty = parseFloat(document.getElementById("targetQty").value);
+    const dueDate = document.getElementById("dueDate").value || null;
+    const criteria = document.getElementById("criteria").value.trim();
+
+    if(!companyName || !flowerName || !colorCategory || !targetQty || targetQty <= 0) return;
+
+    latestOrders = latestOrders.concat([{
+      id: genId(), companyName, flowerName, colorCategory, targetQty, dueDate, criteria,
+      status: "open", actualQty: null, fulfilledAt: null,
+      createdAt: Date.now()
+    }]);
+    saveList(ORDERS_KEY, latestOrders);
+    orderForm.reset();
+    renderAll();
+  });
+
+  function renderMyOrders(){
+    const el = document.getElementById("myOrders");
+    if(latestOrders.length === 0){
+      el.innerHTML = '<p class="empty-note">まだ発注がありません。左のフォームから登録してみてください。<\/p>';
+      return;
+    }
+    el.innerHTML = latestOrders.slice().sort((a,b) => b.createdAt - a.createdAt).map(o => {
+      const cat = CATS[o.colorCategory] || CATS.pale;
+      const pool = sumQty(poolDeliveriesFor(o.flowerName, o.colorCategory));
+      const displayQty = o.status === "fulfilled" ? o.actualQty : pool;
+      const pct = o.status === "fulfilled" ? 100 : (pool / o.targetQty * 100);
+      const statusClass = o.status === "fulfilled" ? "status-fulfilled" : (pct >= 100 ? "status-ready" : "status-open");
+      const statusLabel = o.status === "fulfilled" ? "出荷済み" : (pct >= 100 ? "出荷準備完了" : "募集中");
+      return '<div class="order-card">' +
+        '<div class="head">' +
+          '<div class="titles"><div class="company">'+escapeHtml(o.flowerName)+' ・ '+cat.label+'<\/div>' +
+          '<div class="sub">目標 <span class="num">'+o.targetQty.toFixed(1)+'<\/span> kg'+(o.dueDate ? " ・ 希望納期 "+escapeHtml(o.dueDate) : "")+'<\/div><\/div>' +
+          '<span class="status-badge '+statusClass+'">'+statusLabel+'<\/span>' +
+        '<\/div>' +
+        progressBar(pct, cat.varName) +
+        '<div class="progress-label"><span class="num">'+displayQty.toFixed(1)+' / '+o.targetQty.toFixed(1)+' kg<\/span><span>'+Math.min(100,Math.round(pct))+'%<\/span><\/div>' +
+        (o.criteria ? '<div class="criteria">'+escapeHtml(o.criteria)+'<\/div>' : '') +
+      '<\/div>';
+    }).join("");
+  }
+
+  // --- delivery form ---
+  const photoFile = document.getElementById("photoFile");
+  const photoPreview = document.getElementById("photoPreview");
+  const swatchPreview = document.getElementById("swatchPreview");
+  const detectedNote = document.getElementById("detectedNote");
+  const deliveryColorCategory = document.getElementById("deliveryColorCategory");
+  let currentPhoto = { hex:null, thumbDataUrl:null };
+
+  function resizeForStorage(imgEl, maxSize){
+    const scale = Math.min(1, maxSize / Math.max(imgEl.naturalWidth, imgEl.naturalHeight));
+    const w = Math.max(1, Math.round(imgEl.naturalWidth * scale));
+    const h = Math.max(1, Math.round(imgEl.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(imgEl, 0, 0, w, h);
+    try{ return canvas.toDataURL("image/jpeg", 0.72); }
+    catch(e){ return null; }
+  }
+
+  photoFile.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      photoPreview.src = reader.result;
+      photoPreview.hidden = false;
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        const result = extractColor(tempImg);
+        if(result){
+          currentPhoto.hex = result.hex;
+          swatchPreview.style.background = result.hex;
+          swatchPreview.style.borderColor = "transparent";
+          deliveryColorCategory.value = result.category;
+          detectedNote.textContent = "推定: " + CATS[result.category].label + "(" + result.hex + ") — 判定は目安です。必要ならプルダウンで修正してください。";
+        }
+        currentPhoto.thumbDataUrl = resizeForStorage(tempImg, 240);
+      };
+      tempImg.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const deliveryForm = document.getElementById("deliveryForm");
+  const deliverySubmitBtn = document.getElementById("deliverySubmitBtn");
+  deliveryForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const colorCategory = deliveryColorCategory.value;
+    const flowerName = document.getElementById("deliveryFlowerName").value.trim();
+    const quantityKg = parseFloat(document.getElementById("deliveryQty").value);
+    const farmerName = document.getElementById("farmerName").value.trim();
+    const note = document.getElementById("deliveryNote").value.trim();
+
+    if(!colorCategory || !flowerName || !quantityKg || quantityKg <= 0 || !farmerName) return;
+
+    latestDeliveries = latestDeliveries.concat([{
+      id: genId(), flowerName, colorCategory, quantityKg, farmerName, note,
+      colorHex: currentPhoto.hex || "#B9BDA8",
+      imageDataUrl: currentPhoto.thumbDataUrl || null,
+      status: "in_pool", allocatedOrderId: null,
+      createdAt: Date.now()
+    }]);
+    saveList(DELIVERIES_KEY, latestDeliveries);
+    deliveryForm.reset();
+    photoPreview.hidden = true;
+    swatchPreview.style.background = "var(--pale-tint)";
+    swatchPreview.style.borderColor = "";
+    currentPhoto = { hex:null, thumbDataUrl:null };
+    detectedNote.textContent = "納品しました。まだ写真がありません";
+    renderAll();
+  });
+
+  function renderNeeds(){
+    const el = document.getElementById("needsList");
+    const open = latestOrders.filter(o => o.status === "open");
+    if(open.length === 0){
+      el.innerHTML = '<p class="empty-note">現在募集中の発注はありません。<\/p>';
+      return;
+    }
+    el.innerHTML = open.map(o => {
+      const cat = CATS[o.colorCategory] || CATS.pale;
+      const pool = sumQty(poolDeliveriesFor(o.flowerName, o.colorCategory));
+      const pct = pool / o.targetQty * 100;
+      return '<div class="order-card">' +
+        '<div class="head"><div class="titles"><div class="company">'+escapeHtml(o.flowerName)+'<\/div>' +
+        '<div class="sub">'+escapeHtml(o.companyName)+'<\/div><\/div>' + catChip(o.colorCategory) + '<\/div>' +
+        progressBar(pct, cat.varName) +
+        '<div class="progress-label"><span class="num">現在 '+pool.toFixed(1)+' kg<\/span><span class="num">目標 '+o.targetQty.toFixed(1)+' kg<\/span><\/div>' +
+      '<\/div>';
+    }).join("");
+  }
+
+  function renderMyDeliveries(){
+    const el = document.getElementById("myDeliveries");
+    if(latestDeliveries.length === 0){
+      el.innerHTML = '<p class="empty-note">まだ納品がありません。左のフォームから登録してみてください。<\/p>';
+      return;
+    }
+    el.innerHTML = latestDeliveries.slice().sort((a,b) => b.createdAt - a.createdAt).map(d => {
+      const cat = CATS[d.colorCategory] || CATS.pale;
+      const isAllocated = d.status === "allocated";
+      let subLabel = "在庫プール中";
+      if(isAllocated){
+        const order = latestOrders.find(o => o.id === d.allocatedOrderId);
+        subLabel = order ? (escapeHtml(order.companyName)+"様へ出荷済み") : "出荷済み";
+      }
+      const swatch = d.imageDataUrl
+        ? '<img class="swatch" src="'+d.imageDataUrl+'" alt="'+escapeHtml(d.flowerName)+'の写真">'
+        : '<div class="swatch" style="background:'+(d.colorHex||"#ccc")+'"><\/div>';
+      return '<div class="mini-row">' + swatch +
+        '<div class="meta"><div class="name">'+escapeHtml(d.flowerName)+'<\/div>' +
+        '<div class="sub">'+cat.label+' ・ <span class="num">'+d.quantityKg.toFixed(1)+'<\/span> kg ・ '+subLabel+'<\/div><\/div>' +
+        '<span class="status-badge '+(isAllocated ? "status-fulfilled" : "status-open")+'">'+(isAllocated ? "出荷済み" : "在庫中")+'<\/span>' +
+      '<\/div>';
+    }).join("");
+  }
+
+  // --- broker dashboard ---
+  function allocateLot(orderId){
+    const order = latestOrders.find(o => o.id === orderId);
+    if(!order || order.status !== "open") return;
+    const candidates = poolDeliveriesFor(order.flowerName, order.colorCategory)
+      .slice()
+      .sort((a,b) => a.createdAt - b.createdAt);
+    let sum = 0;
+    const selectedIds = [];
+    for(const d of candidates){
+      if(sum >= order.targetQty) break;
+      selectedIds.push(d.id);
+      sum += d.quantityKg;
+    }
+    if(sum < order.targetQty) return;
+
+    latestDeliveries = latestDeliveries.map(d =>
+      selectedIds.includes(d.id) ? Object.assign({}, d, { status: "allocated", allocatedOrderId: orderId }) : d
+    );
+    latestOrders = latestOrders.map(o =>
+      o.id === orderId ? Object.assign({}, o, { status: "fulfilled", actualQty: sum, fulfilledAt: Date.now() }) : o
+    );
+    saveList(DELIVERIES_KEY, latestDeliveries);
+    saveList(ORDERS_KEY, latestOrders);
+    renderAll();
+  }
+
+  function renderOrderBoard(){
+    const el = document.getElementById("orderBoard");
+    if(latestOrders.length === 0){
+      el.innerHTML = '<p class="empty-note">発注はまだありません。<\/p>';
+      return;
+    }
+    const sorted = latestOrders.slice().sort((a,b) => {
+      if(a.status !== b.status) return a.status === "open" ? -1 : 1;
+      return b.createdAt - a.createdAt;
+    });
+    el.innerHTML = sorted.map(o => {
+      const cat = CATS[o.colorCategory] || CATS.pale;
+      const pool = sumQty(poolDeliveriesFor(o.flowerName, o.colorCategory));
+      const pct = o.status === "fulfilled" ? 100 : (pool / o.targetQty * 100);
+      const ready = o.status === "open" && pct >= 100;
+      const statusClass = o.status === "fulfilled" ? "status-fulfilled" : (ready ? "status-ready" : "status-open");
+      const statusLabel = o.status === "fulfilled" ? "出荷済み" : (ready ? "出荷準備完了" : "募集中");
+      const displayQty = o.status === "fulfilled" ? o.actualQty : pool;
+      const actionArea = o.status === "fulfilled"
+        ? '<span class="empty-note">'+fmtDate(o.fulfilledAt)+' 出荷完了<\/span>'
+        : (ready
+          ? '<button type="button" class="ready-btn" id="allocate-'+o.id+'">ロットを確定して出荷する<\/button>'
+          : '<span class="empty-note">在庫プールが目標に達するとロットを確定できます<\/span>');
+      return '<div class="order-card">' +
+        '<div class="head">' +
+          '<div class="titles"><div class="company">'+escapeHtml(o.companyName)+'<\/div>' +
+          '<div class="sub">'+escapeHtml(o.flowerName)+' ・ 目標 <span class="num">'+o.targetQty.toFixed(1)+'<\/span> kg'+(o.dueDate ? " ・ 納期 "+escapeHtml(o.dueDate) : "")+'<\/div><\/div>' +
+          catChip(o.colorCategory) +
+          '<span class="status-badge '+statusClass+'">'+statusLabel+'<\/span>' +
+        '<\/div>' +
+        progressBar(pct, cat.varName) +
+        '<div class="progress-label"><span class="num">'+displayQty.toFixed(1)+' / '+o.targetQty.toFixed(1)+' kg<\/span><span>'+Math.min(100,Math.round(pct))+'%<\/span><\/div>' +
+        (o.criteria ? '<div class="criteria">'+escapeHtml(o.criteria)+'<\/div>' : '') +
+        '<div class="foot">' + actionArea + '<\/div>' +
+      '<\/div>';
+    }).join("");
+
+    sorted.forEach(o => {
+      const btn = document.getElementById("allocate-" + o.id);
+      if(btn) btn.addEventListener("click", () => allocateLot(o.id));
+    });
+  }
+
+  function renderPoolBoard(){
+    const el = document.getElementById("poolBoard");
+    const groups = {};
+    latestDeliveries.filter(d => d.status === "in_pool").forEach(d => {
+      const key = d.flowerName + "|" + d.colorCategory;
+      if(!groups[key]) groups[key] = { flowerName: d.flowerName, colorCategory: d.colorCategory, items: [] };
+      groups[key].items.push(d);
+    });
+    const keys = Object.keys(groups);
+    if(keys.length === 0){
+      el.innerHTML = '<p class="empty-note">在庫はまだありません。<\/p>';
+      return;
+    }
+    el.innerHTML = keys.map(key => {
+      const g = groups[key];
+      const total = sumQty(g.items);
+      const items = g.items.slice().sort((a,b) => b.createdAt - a.createdAt);
+      return '<div class="pool-group">' +
+        '<div class="head"><div><strong>'+escapeHtml(g.flowerName)+'<\/strong> ' + catChip(g.colorCategory) + '<\/div>' +
+        '<span class="total num">'+total.toFixed(1)+' kg<\/span><\/div>' +
+        '<div class="contrib-list">' + items.map(d =>
+          '<div class="contrib-row"><span class="who">'+escapeHtml(d.farmerName)+'<\/span><span class="num">'+d.quantityKg.toFixed(1)+' kg ・ '+fmtDate(d.createdAt)+'<\/span><\/div>'
+        ).join("") + '<\/div>' +
+      '<\/div>';
+    }).join("");
+  }
+
+  function renderLotBoard(){
+    const el = document.getElementById("lotBoard");
+    const fulfilled = latestOrders.filter(o => o.status === "fulfilled").sort((a,b) => b.fulfilledAt - a.fulfilledAt);
+    if(fulfilled.length === 0){
+      el.innerHTML = '<p class="empty-note">出荷済みのロットはまだありません。<\/p>';
+      return;
+    }
+    el.innerHTML = fulfilled.map(o => {
+      const contributors = latestDeliveries.filter(d => d.allocatedOrderId === o.id).sort((a,b) => a.createdAt - b.createdAt);
+      return '<div class="lot-card">' +
+        '<div class="head"><div><strong>'+escapeHtml(o.companyName)+'<\/strong> 向け ・ '+escapeHtml(o.flowerName)+' '+catChip(o.colorCategory)+'<\/div>' +
+        '<span class="total num">'+o.actualQty.toFixed(1)+' kg<\/span><\/div>' +
+        '<div class="empty-note" style="margin:6px 0 10px;">出荷日: '+fmtDate(o.fulfilledAt)+'<\/div>' +
+        '<div class="contrib-list">' + contributors.map(d =>
+          '<div class="contrib-row"><span class="who">'+escapeHtml(d.farmerName)+'<\/span><span class="num">'+d.quantityKg.toFixed(1)+' kg<\/span><\/div>'
+        ).join("") + '<\/div>' +
+      '<\/div>';
+    }).join("");
+  }
+
+  function renderAll(){
+    renderMyOrders();
+    renderNeeds();
+    renderMyDeliveries();
+    renderOrderBoard();
+    renderPoolBoard();
+    renderLotBoard();
+  }
+
+  window.addEventListener("storage", (e) => {
+    if(e.key === ORDERS_KEY || e.key === DELIVERIES_KEY){
+      latestOrders = loadList(ORDERS_KEY);
+      latestDeliveries = loadList(DELIVERIES_KEY);
+      renderAll();
+    }
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
